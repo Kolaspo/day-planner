@@ -1,0 +1,82 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --paper: 245 242 235;
+  --card: 255 254 251;
+  --ink: 31 30 27;
+  --muted: 112 107 98;
+  --line: 224 218 206;
+  --accent: 34 84 74;
+  --q1: 190 66 50;
+  --q2: 44 95 168;
+  --q3: 196 138 34;
+  --q4: 132 126 116;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: 22 22 20;
+    --card: 32 31 29;
+    --ink: 237 233 225;
+    --muted: 160 154 143;
+    --line: 56 54 50;
+    --accent: 110 185 165;
+    --q1: 232 110 92;
+    --q2: 108 154 230;
+    --q3: 230 178 80;
+    --q4: 150 144 134;
+    color-scheme: dark;
+  }
+}
+
+html,
+body {
+  background: rgb(var(--paper));
+  color: rgb(var(--ink));
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  font-feature-settings: "tnum" 1, "cv11" 1;
+  min-height: 100dvh;
+}
+
+@layer components {
+  .card {
+    @apply rounded-2xl border border-line bg-card;
+  }
+  .btn {
+    @apply inline-flex items-center justify-center gap-1.5 rounded-xl px-3.5 py-2 text-sm font-medium transition active:scale-[0.98] disabled:opacity-40 disabled:pointer-events-none;
+  }
+  .btn-primary {
+    @apply btn bg-ink text-paper hover:opacity-90;
+  }
+  .btn-accent {
+    @apply btn bg-accent text-white hover:opacity-90;
+  }
+  .btn-ghost {
+    @apply btn text-ink hover:bg-ink/5;
+  }
+  .btn-outline {
+    @apply btn border border-line hover:bg-ink/5;
+  }
+  .input {
+    @apply w-full rounded-xl border border-line bg-paper px-3 py-2 text-[15px] outline-none transition placeholder:text-muted/70 focus:border-ink/40 focus:ring-2 focus:ring-ink/10;
+  }
+  .label {
+    @apply mb-1 block text-xs font-medium uppercase tracking-wide text-muted;
+  }
+  .chip {
+    @apply inline-flex items-center rounded-full border border-line px-2.5 py-1 text-xs font-medium transition hover:bg-ink/5;
+  }
+  .eyebrow {
+    @apply text-[11px] font-semibold uppercase tracking-[0.14em] text-muted;
+  }
+}
+
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom);
+}
