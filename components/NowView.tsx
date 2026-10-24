@@ -7,7 +7,7 @@ import { Empty, QuadrantDot, Q_BG } from "./ui";
 import { useNow } from "@/hooks/useNow";
 import { trackedMinutes } from "@/lib/learning";
 import { minutesToPlan, plannedDay } from "@/lib/derive";
-import { dateKey, dayRange, fmtClock, fmtMinutes, fmtTime } from "@/lib/time";
+import { dateKey, dayRange, fmtClock, fmtDateTime, fmtMinutes, fmtTime, SUSPICIOUS_SESSION_MIN, toLocalInput } from "@/lib/time";
 import type { Task } from "@/lib/types";
 
 export default function NowView({ data, byTask, history, settings, setTab }: ViewProps) {
@@ -72,7 +72,15 @@ export default function NowView({ data, byTask, history, settings, setTab }: Vie
               <p className={`mt-6 font-mono text-6xl font-medium tracking-tight tabular-nums ${current ? "" : "text-muted"}`}>
                 {fmtClock(current ? sessionMs : 0)}
               </p>
-              <p className="mt-1 text-xs text-muted">{current ? `this session · started ${fmtTime(running!.started_at)}` : "timer paused"}</p>
+              <p className="mt-1 text-xs text-muted">{current ? `this session · started ${fmtDateTime(running!.started_at)}` : "timer paused"}</p>
+
+              {current && sessionMs > SUSPICIOUS_SESSION_MIN * 60_000 && (
+                <ForgotToStop
+                  startedAt={running!.started_at}
+                  estimate={current.estimate_minutes}
+                  onEnd={(endMs) => data.updateEntry(running!.id, { ended_at: new Date(endMs).toISOString() })}
+                />
+              )}
 
               <div className="mt-5">
                 <div className="mb-1 flex justify-between text-xs">
@@ -174,5 +182,36 @@ function StartRow({ task, label, late, tracked, onStart }: { task: Task; label: 
       </div>
       <button className="btn-outline px-3 py-1.5" onClick={onStart}><Icon name="play" size={13} /> Start</button>
     </li>
+  );
+}
+
+function ForgotToStop({ startedAt, estimate, onEnd }: { startedAt: string; estimate: number; onEnd: (endMs: number) => void }) {
+  const start = Date.parse(startedAt);
+  const [end, setEnd] = useState(() => toLocalInput(start + estimate * 60_000));
+  const [err, setErr] = useState<string | null>(null);
+  return (
+    <div className="mt-4 rounded-xl bg-q1/10 p-3 text-sm">
+      <p className="font-semibold text-q1">Forgot to stop the timer?</p>
+      <p className="mt-0.5 text-xs text-muted">This session has been running for over {SUSPICIOUS_SESSION_MIN / 60} hours. Tell it when you actually stopped so your stats and learned times stay right.</p>
+      <div className="mt-2.5 flex flex-wrap items-center gap-2">
+        <button className="btn-accent px-2.5 py-1.5 text-xs" onClick={() => onEnd(start + estimate * 60_000)}>
+          Stop after {fmtMinutes(estimate)} (estimate)
+        </button>
+        <span className="text-xs text-muted">or it ended at</span>
+        <input type="datetime-local" className="input w-[188px] px-2 py-1 font-mono text-xs" value={end} onChange={(e) => setEnd(e.target.value)} aria-label="Actual end time" />
+        <button
+          className="btn-outline px-2.5 py-1.5 text-xs"
+          onClick={() => {
+            const ms = new Date(end).getTime();
+            if (!(ms > start) || ms > Date.now()) return setErr("Pick a time after the start and not in the future.");
+            setErr(null);
+            onEnd(ms);
+          }}
+        >
+          Save
+        </button>
+      </div>
+      {err && <p className="mt-1.5 text-xs font-medium text-q1">{err}</p>}
+    </div>
   );
 }

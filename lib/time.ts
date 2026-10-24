@@ -60,5 +60,20 @@ export function localTimeZone(): string {
   }
 }
 
+/** Value for <input type="datetime-local">, in local time: "2026-10-21T14:05". */
+export function toLocalInput(t: number | string): string {
+  const d = new Date(t);
+  return `${dateKey(d)}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+/** "Tue 21 Oct, 14:05" */
+export function fmtDateTime(t: number | string): string {
+  const d = new Date(t);
+  return `${d.toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" })}, ${fmtTime(d.getTime())}`;
+}
+
+/** Sessions longer than this are probably a timer someone forgot to stop. */
+export const SUSPICIOUS_SESSION_MIN = 6 * 60;
+
 export const minutesBetween = (a: number | string, b: number | string) =>
   (new Date(b).getTime() - new Date(a).getTime()) / 60_000;
